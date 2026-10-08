@@ -44,6 +44,7 @@ final class VideoAnalyzer: Sendable {
     exercise: ExerciseType,
     modelType: PoseModelType,
     smoothingEnabled: Bool,
+    leadingLeg: BodySide? = nil,
     progress: @escaping @Sendable (Double) -> Void
   ) async throws -> AnalysisResult {
     let asset = AVURLAsset(url: url)
@@ -105,7 +106,7 @@ final class VideoAnalyzer: Sendable {
         let lms = smoothingEnabled
           ? smoother.smooth(rawLms, timestampMs: Double(timestampMs))
           : rawLms
-        let features = FeatureExtractor.compute(lms, exercise: exercise)
+        let features = FeatureExtractor.compute(lms, exercise: exercise, leadingLeg: leadingLeg)
         if let rep = repCounter.push(features, timestampMs: Double(timestampMs)) {
           reps.append(rep)
         }

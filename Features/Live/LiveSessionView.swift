@@ -86,7 +86,8 @@ struct LiveSessionView: View {
           snapshot: viewModel.snapshot,
           currentScore: viewModel.currentScore,
           showAngleDebug: showAngleDebug,
-          isJudging: viewModel.phase == .running
+          isJudging: viewModel.phase == .running,
+          exercise: viewModel.exercise
         )
 
         bottomControls
@@ -204,8 +205,25 @@ struct LiveSessionView: View {
           Text(exercise.displayName).tag(exercise)
         }
       }
-      .pickerStyle(.segmented)
+      .pickerStyle(.menu)
+      .tint(.white)
       .colorScheme(.dark)
+
+      // ランジは左右非対称運動のため、前に出す脚を明示すると精度が上がる。
+      if viewModel.exercise == .lunge {
+        Picker("前に出す脚", selection: $viewModel.lungeLeadingLeg) {
+          Text("自動（精度がやや下がります）").tag(BodySide?.none)
+          ForEach(BodySide.allCases) { side in
+            Text(side.displayName).tag(BodySide?.some(side))
+          }
+        }
+        .pickerStyle(.menu)
+        .tint(.white)
+        .colorScheme(.dark)
+        .onChange(of: viewModel.lungeLeadingLeg) { _, _ in
+          viewModel.lungeLeadingLegChanged()
+        }
+      }
 
       if let recommended = FramingEvaluator.recommendedViews[viewModel.exercise] {
         VStack(alignment: .leading, spacing: 4) {

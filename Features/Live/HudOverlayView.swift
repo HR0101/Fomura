@@ -14,6 +14,18 @@ struct HudOverlayView: View {
   let currentScore: Double?
   let showAngleDebug: Bool
   let isJudging: Bool
+  let exercise: ExerciseType
+
+  // 深さゲージのラベルは種目によって動作の呼び方が異なる（元はスクワット専用の文言だった）。
+  private var depthGaugeLabel: String {
+    switch exercise {
+    case .squat, .lunge: return "しゃがみの深さ"
+    case .deadlift, .bentOverRow, .hipThrust: return "ヒンジの深さ"
+    case .benchPress, .overheadPress, .pushup: return "下ろす深さ"
+    case .bicepCurl: return "曲げの深さ"
+    case .other: return "可動域の深さ"
+    }
+  }
 
   var body: some View {
     VStack(spacing: 0) {
@@ -121,7 +133,7 @@ struct HudOverlayView: View {
   private var depthGauge: some View {
     if let snapshot, snapshot.detected {
       VStack(alignment: .leading, spacing: 3) {
-        Text("しゃがみの深さ \(Int((snapshot.depthRatio * 100).rounded()))%")
+        Text("\(depthGaugeLabel) \(Int((snapshot.depthRatio * 100).rounded()))%")
           .font(.caption.weight(.semibold))
           .foregroundStyle(.white)
         GeometryReader { geometry in

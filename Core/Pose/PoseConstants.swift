@@ -3,17 +3,26 @@
 //  Fomura
 //
 //  判定ロジック全体で共有する型としきい値の集約。
-//  しきい値はWeb版から抽出した確定値であり、変更する場合はWeb版・設計書・
-//  パリティテストを同時に更新すること（モバイル設計書.md 第6章）。
+//  スクワット/デッドリフト/ベンチプレスのしきい値はWeb版から抽出した確定値であり、
+//  変更する場合はWeb版・設計書・パリティテストを同時に更新すること（モバイル設計書.md 第6章）。
+//  それ以外の追加種目（モバイル固有）はWeb版に対応が無いため、精度検証を経た
+//  独自のしきい値・数式を採用する（各ファイルの該当箇所にコメントで根拠を明記）。
 //
 
 import Foundation
 
-// 対象種目（Web版 features.ts の ExerciseType と同一の生値）。
+// 対象種目。squat/deadlift/bench_press の rawValue は Web版 features.ts の
+// ExerciseType と同一（パリティ対象）。それ以外はモバイル版で追加した種目。
 enum ExerciseType: String, CaseIterable, Codable, Identifiable, Sendable {
   case squat
   case deadlift
   case benchPress = "bench_press"
+  case overheadPress = "overhead_press"
+  case pushup
+  case bicepCurl = "bicep_curl"
+  case bentOverRow = "bent_over_row"
+  case lunge
+  case hipThrust = "hip_thrust"
   case other
 
   var id: String { rawValue }
@@ -24,6 +33,12 @@ enum ExerciseType: String, CaseIterable, Codable, Identifiable, Sendable {
     case .squat: return "スクワット"
     case .deadlift: return "デッドリフト"
     case .benchPress: return "ベンチプレス"
+    case .overheadPress: return "ショルダープレス"
+    case .pushup: return "腕立て伏せ"
+    case .bicepCurl: return "アームカール"
+    case .bentOverRow: return "ベントオーバーロー"
+    case .lunge: return "ランジ"
+    case .hipThrust: return "ヒップスラスト"
     case .other: return "その他"
     }
   }
@@ -87,7 +102,7 @@ enum FeatureValue: Codable, Equatable, Sendable {
   }
 }
 
-// 判定ロジック共通の定数（出典: Web版該当ファイル）。
+// 判定ロジック共通の定数（出典: Web版該当ファイル、または追加種目用に新設）。
 enum PoseConstants {
   // 可視性が閾値未満のランドマークは信頼しない（features.ts / warnings.ts / framing.ts）。
   static let visibilityFloor = 0.5
@@ -118,4 +133,13 @@ enum PoseConstants {
 
   // 警告フィードバック（音・読み上げ）の同一警告クールダウン秒数。
   static let warningFeedbackCooldownSec = 5.0
+
+  // 追加種目の「指摘」しきい値をFSM(RepCounterのtop/bottom)から意図的に離すための共通マージン(度)。
+  // レビューで判明した既知の落とし穴: 指摘条件をFSMのbottom/topと同じ側に閾値を置くと、
+  // レップとして確定した時点で必ず条件を満たす/満たさないため指摘が絶対に発火しないデッドコードになる
+  // （例: bottom=90のとき `minElbow>115` は確定レップのminElbowが常に90以下なので絶対にfalse）。
+  // これを避けるため、深さ系の指摘は `bottom - shallowFaultMargin`、ロックアウト系の指摘は
+  // `top + lockoutFaultMargin` を閾値にする（=「ぎりぎり合格」の一帯だけを検出する設計）。
+  static let shallowFaultMargin = 6.0
+  static let lockoutFaultMargin = 6.0
 }

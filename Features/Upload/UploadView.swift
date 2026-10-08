@@ -32,6 +32,8 @@ struct PickedVideo: Transferable {
 @Observable
 final class UploadViewModel {
   var exercise: ExerciseType = .squat
+  // ランジ専用: 前に出す脚（nil=自動選択）。
+  var lungeLeadingLeg: BodySide?
   var pickedItem: PhotosPickerItem?
   private(set) var videoURL: URL?
   private(set) var isLoadingVideo = false
@@ -70,6 +72,7 @@ final class UploadViewModel {
 
     let analyzer = VideoAnalyzer()
     let exercise = exercise
+    let leadingLeg = lungeLeadingLeg
     // ライブ判定と同じ設定（モデル種別・平滑化）で解析する。
     let modelType = PoseModelType(
       rawValue: UserDefaults.standard.string(forKey: AppSettings.modelType) ?? "lite"
@@ -85,7 +88,8 @@ final class UploadViewModel {
             url: videoURL,
             exercise: exercise,
             modelType: modelType,
-            smoothingEnabled: smoothingEnabled
+            smoothingEnabled: smoothingEnabled,
+            leadingLeg: leadingLeg
           ) { value in
             Task { @MainActor [weak self] in
               self?.progress = value
@@ -147,6 +151,18 @@ struct UploadView: View {
         }
         .pickerStyle(.menu)
         .disabled(viewModel.isAnalyzing)
+
+        // ランジは左右非対称運動のため、前に出す脚を明示すると精度が上がる。
+        if viewModel.exercise == .lunge {
+          Picker("前に出す脚", selection: $viewModel.lungeLeadingLeg) {
+            Text("自動（精度がやや下がります）").tag(BodySide?.none)
+            ForEach(BodySide.allCases) { side in
+              Text(side.displayName).tag(BodySide?.some(side))
+            }
+          }
+          .pickerStyle(.menu)
+          .disabled(viewModel.isAnalyzing)
+        }
       }
 
       Section("動画") {

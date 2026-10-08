@@ -38,6 +38,8 @@ final class AnalysisPipeline: @unchecked Sendable {
   private var repCounter: RepCounter?
   private var running = false
   private var lastSnapshotMs = -Double.infinity
+  // ランジ専用: 前に出す脚の明示指定（nilなら可視性ベースの自動選択にフォールバック）。
+  private var lungeLeadingLeg: BodySide?
 
   // 平滑化（One Euro Filter）。OFF時はWeb版と完全互換の生座標で判定する。
   private let smoother = LandmarkSmoother()
@@ -49,16 +51,24 @@ final class AnalysisPipeline: @unchecked Sendable {
   var onSkeleton: (@Sendable ([Landmark]?) -> Void)?
 
   // プレビューを開始する（骨格＋撮影ガイドのみ。開始前の位置合わせ用）。
-  func startPreview(exercise: ExerciseType, smoothingEnabled: Bool) {
+  func startPreview(exercise: ExerciseType, smoothingEnabled: Bool, lungeLeadingLeg: BodySide? = nil) {
     queue.async { [weak self] in
       guard let self else { return }
       self.exercise = exercise
       self.smoothingEnabled = smoothingEnabled
+      self.lungeLeadingLeg = lungeLeadingLeg
       self.mode = .preview
       self.repCounter = nil
       self.running = true
       self.lastSnapshotMs = -.infinity
       self.smoother.reset()
+    }
+  }
+
+  // ランジの前脚指定を更新する（プレビュー中の選択変更に追随させる）。
+  func updateLungeLeadingLeg(_ leg: BodySide?) {
+    queue.async { [weak self] in
+      self?.lungeLeadingLeg = leg
     }
   }
 
@@ -151,7 +161,7 @@ final class AnalysisPipeline: @unchecked Sendable {
       )
 
     case .judging:
-      let features = FeatureExtractor.compute(lms, exercise: exercise)
+      let features = FeatureExtractor.compute(lms, exercise: exercise, leadingLeg: lungeLeadingLeg)
 
       // レップ計数（完了したら即時通知。ハプティクス・音声カウント用）。
       if let rep = repCounter?.push(features, timestampMs: timestampMs) {

@@ -23,11 +23,18 @@ struct CompletedRep: Sendable, Identifiable {
 }
 
 final class RepCounter {
-  // 種目ごとの「立ち上がり」「最下点」しきい値（度）。Web版 THRESHOLDS と同値。
+  // 種目ごとの「立ち上がり」「最下点」しきい値（度）。squat/deadlift/benchPressはWeb版 THRESHOLDS と同値。
+  // それ以外はモバイル版で追加した種目（設計レビュー済み）。
   static let thresholds: [ExerciseType: (top: Double, bottom: Double)] = [
     .squat: (top: 160, bottom: 110),
     .deadlift: (top: 165, bottom: 110),
     .benchPress: (top: 158, bottom: 95),
+    .overheadPress: (top: 160, bottom: 90),
+    .pushup: (top: 160, bottom: 90),
+    .bicepCurl: (top: 160, bottom: 50),
+    .bentOverRow: (top: 165, bottom: 70),
+    .lunge: (top: 160, bottom: 100),
+    .hipThrust: (top: 170, bottom: 100),
     .other: (top: 160, bottom: 105),
   ]
 

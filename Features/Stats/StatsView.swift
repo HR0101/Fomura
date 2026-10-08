@@ -18,6 +18,12 @@ extension ExerciseType {
     case .squat: return .green
     case .deadlift: return .blue
     case .benchPress: return .orange
+    case .overheadPress: return .purple
+    case .pushup: return .teal
+    case .bicepCurl: return .pink
+    case .bentOverRow: return .indigo
+    case .lunge: return .mint
+    case .hipThrust: return .brown
     case .other: return .gray
     }
   }

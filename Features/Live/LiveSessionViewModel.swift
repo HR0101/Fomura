@@ -31,6 +31,8 @@ final class LiveSessionViewModel {
 
   var phase: Phase = .initializing
   var exercise: ExerciseType = .squat
+  // ランジ専用: 前に出す脚（nil=自動選択）。UIから直接バインドする。
+  var lungeLeadingLeg: BodySide?
   private(set) var facing: CameraFacing = .back
   private(set) var snapshot: Snapshot?
   private(set) var completedReps: [CompletedRep] = []
@@ -120,13 +122,20 @@ final class LiveSessionViewModel {
 
   // プレビューを開始する（骨格＋撮影ガイドで立ち位置を合わせられる）。
   private func startPreview() {
-    pipeline.startPreview(exercise: exercise, smoothingEnabled: smoothingEnabled)
+    pipeline.startPreview(
+      exercise: exercise, smoothingEnabled: smoothingEnabled, lungeLeadingLeg: lungeLeadingLeg
+    )
     cameraService.start()
   }
 
   // 種目変更をパイプラインへ反映する（プレビュー中のみ）。
   func exerciseChanged() {
     pipeline.updateExercise(exercise)
+  }
+
+  // ランジの前脚選択をパイプラインへ反映する。
+  func lungeLeadingLegChanged() {
+    pipeline.updateLungeLeadingLeg(lungeLeadingLeg)
   }
 
   // カメラ→推論→解析→UI のコールバック連結。

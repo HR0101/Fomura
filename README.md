@@ -10,6 +10,7 @@ Fomura（筋トレ特化型 骨格モーション評価システム）の iOS �
   - 骨格のオーバーレイ表示（Skeleton Overlay）
   - 前面・背面カメラの切り替えとミラーリング対応
 - **自動レップカウント & フォーム評価**
+  - **対応種目**: スクワット、デッドリフト、ベンチプレス、ショルダープレス（Overhead Press）、腕立て伏せ（Push-up）、アームカール（Bicep Curl）、ベントオーバーロー（Bent-over Row）、ランジ（Lunge）、ヒップスラスト（Hip Thrust）
   - 関節角度や深度などの特徴量抽出（`FeatureExtractor`）
   - ステートマシンによる自動レップ計数（`RepCounter`）
   - 種目ごとの個別スコアリング（`RepScorer`）
